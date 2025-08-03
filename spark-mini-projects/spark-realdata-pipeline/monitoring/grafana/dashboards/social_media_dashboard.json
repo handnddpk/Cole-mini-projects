@@ -1,0 +1,125 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Real Data Pipeline - Social Media Analytics",
+    "tags": ["realdata", "social", "analytics"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Twitter Daily Volume",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "SELECT date, total_tweets FROM twitter_daily ORDER BY date",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Tweets",
+            "show": true
+          }
+        ],
+        "xAxes": [
+          {
+            "show": true,
+            "mode": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Sentiment Analysis Trend",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "SELECT date, avg_sentiment FROM twitter_daily ORDER BY date",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Sentiment Score",
+            "min": -1,
+            "max": 1,
+            "show": true
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Top Trending Hashtags",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "SELECT hashtag, mention_count FROM twitter_hashtags WHERE date = CURRENT_DATE ORDER BY mention_count DESC LIMIT 10",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Reddit Activity by Subreddit",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "SELECT subreddit, post_count FROM reddit_subreddits WHERE date = CURRENT_DATE ORDER BY post_count DESC LIMIT 10",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "News Articles by Category",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "SELECT category, article_count FROM news_categories WHERE date = CURRENT_DATE ORDER BY article_count DESC",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        }
+      }
+    ],
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    "refresh": "5m"
+  }
+}

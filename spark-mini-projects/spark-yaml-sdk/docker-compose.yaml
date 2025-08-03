@@ -13,7 +13,7 @@ services:
       - "8080:8080"
       - "7077:7077"
     volumes:
-      - ./gds-data-core-v2:/opt/spark-apps
+      - ./core-sdk:/opt/spark-apps
       - ./data:/opt/spark-data
       - ./jars:/opt/spark/jars
 
@@ -33,7 +33,7 @@ services:
       - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
       - SPARK_SSL_ENABLED=no
     volumes:
-      - ./gds-data-core-v2:/opt/spark-apps
+      - ./core-sdk:/opt/spark-apps
       - ./data:/opt/spark-data
       - ./jars:/opt/spark/jars
 
@@ -102,7 +102,7 @@ services:
       - SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info"
       - PYTHONPATH=/home/jovyan/work
     volumes:
-      - ./gds-data-core-v2:/home/jovyan/work
+      - ./core-sdk:/home/jovyan/work
       - ./notebooks:/home/jovyan/notebooks
       - ./data/jupyter:/home/jovyan/data
       - ./data/output:/opt/spark-data/output

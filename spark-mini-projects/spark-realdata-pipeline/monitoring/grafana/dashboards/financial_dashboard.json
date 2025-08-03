@@ -1,0 +1,111 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Real Data Pipeline - Financial Markets",
+    "tags": ["realdata", "financial", "trading"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Market Performance by Sector",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "SELECT sector, avg_change FROM stocks_sectors WHERE date = CURRENT_DATE ORDER BY avg_change DESC",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 10,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Trading Volume",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "SELECT date, SUM(volume) as total_volume FROM stocks_daily WHERE date >= CURRENT_DATE - INTERVAL '30 days' GROUP BY date ORDER BY date",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Volume",
+            "show": true
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 10
+        }
+      },
+      {
+        "id": 3,
+        "title": "Market Breadth",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "SELECT date, advancing_stocks, declining_stocks FROM market_market_breadth ORDER BY date",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 10
+        }
+      },
+      {
+        "id": 4,
+        "title": "Crypto Performance",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "SELECT symbol, close_price, daily_return FROM crypto_daily WHERE date = CURRENT_DATE ORDER BY market_cap DESC LIMIT 10",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 18
+        }
+      },
+      {
+        "id": 5,
+        "title": "Recent Trading Alerts",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "SELECT alert_timestamp, symbol, alert_type, current_price, change_pct FROM trading_alerts WHERE alert_timestamp >= NOW() - INTERVAL '1 hour' ORDER BY alert_timestamp DESC LIMIT 20",
+            "format": "logs",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 18
+        }
+      }
+    ],
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "refresh": "1m"
+  }
+}

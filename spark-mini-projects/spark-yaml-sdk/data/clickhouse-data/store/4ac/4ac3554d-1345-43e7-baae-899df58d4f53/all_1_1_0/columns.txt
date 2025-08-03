@@ -1,5 +1,0 @@
-columns format version: 1
-3 columns:
-`customer_id` Int32
-`customer_name` String
-`total_spent` Float64
