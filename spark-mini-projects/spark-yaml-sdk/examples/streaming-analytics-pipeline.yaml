@@ -1,0 +1,148 @@
+# Streaming Analytics Pipeline Example
+# Real-time data processing with machine learning inference
+
+apiVersion: "spark.platform.io/v1"
+kind: "SparkPipeline"
+metadata:
+  name: "realtime-analytics"
+  namespace: "production"
+  labels:
+    team: "analytics"
+    environment: "production"
+    criticality: "high"
+    
+spec:
+  # Streaming configuration
+  type: "streaming"
+  
+  # Resource allocation for streaming workload
+  driver:
+    cores: 2
+    memory: "4g"
+    
+  executor:
+    instances: 5
+    cores: 4
+    memory: "8g"
+    
+  # Streaming sources
+  sources:
+    - name: "user_events"
+      type: "kafka"
+      format: "json"
+      config:
+        topic: "user-events"
+        servers: "kafka:9092"
+        startingOffsets: "latest"
+        
+    - name: "user_profiles"
+      type: "delta"
+      path: "s3://data-lake/user-profiles"
+      readChangeFeed: true
+      
+  # Stream processing transformations
+  transformations:
+    - name: "parse_events"
+      type: "sql"
+      query: |
+        SELECT 
+          user_id,
+          event_type,
+          event_data,
+          CAST(timestamp AS TIMESTAMP) as event_timestamp,
+          DATE(timestamp) as event_date
+        FROM user_events
+        WHERE user_id IS NOT NULL
+        
+    - name: "sessionize_events"
+      type: "streaming_aggregation"
+      watermark:
+        column: "event_timestamp"
+        delay: "10 minutes"
+      groupBy: ["user_id"]
+      window:
+        duration: "30 minutes"
+        slide: "5 minutes"
+      aggregations:
+        - function: "count"
+          alias: "event_count"
+        - function: "collect_list"
+          column: "event_type"
+          alias: "event_sequence"
+        - function: "max"
+          column: "event_timestamp"
+          alias: "session_end"
+          
+    - name: "enrich_with_profile"
+      type: "stream_static_join"
+      leftSource: "sessionize_events"
+      rightSource: "user_profiles"
+      joinType: "left"
+      condition: "sessionize_events.user_id = user_profiles.user_id"
+      
+    - name: "ml_scoring"
+      type: "ml_inference"
+      model:
+        name: "user_intent_classifier"
+        version: "v2.1"
+        registry: "mlflow"
+      features: 
+        - "event_count"
+        - "event_sequence"
+        - "user_segment"
+        - "account_age"
+      outputColumn: "intent_prediction"
+      
+  # Streaming sinks
+  sinks:
+    - name: "real_time_scores"
+      type: "kafka"
+      config:
+        topic: "ml-predictions"
+        servers: "kafka:9092"
+      outputMode: "append"
+      trigger:
+        type: "processingTime"
+        interval: "30 seconds"
+        
+    - name: "analytics_store"
+      type: "delta"
+      path: "s3://data-lake/user-sessions"
+      outputMode: "append"
+      trigger:
+        type: "processingTime" 
+        interval: "5 minutes"
+      checkpointLocation: "s3://checkpoints/user-sessions"
+      
+  # Monitoring and alerting
+  monitoring:
+    metrics:
+      - name: "throughput"
+        type: "inputRowsPerSecond"
+        threshold: 1000
+        
+      - name: "latency"
+        type: "durationMs.triggerExecution"
+        threshold: 30000  # 30 seconds
+        
+    alerts:
+      - name: "low_throughput"
+        condition: "throughput < 500"
+        severity: "warning"
+        notification: "slack://analytics-team"
+        
+      - name: "high_latency"
+        condition: "latency > 60000"
+        severity: "critical"
+        notification: "pagerduty://on-call"
+        
+  # Auto-scaling configuration
+  autoScaling:
+    enabled: true
+    minExecutors: 2
+    maxExecutors: 10
+    scalingPolicy:
+      scaleUpThreshold: 0.8  # Scale up when 80% utilized
+      scaleDownThreshold: 0.2  # Scale down when 20% utilized
+      scaleUpCooldown: "2 minutes"
+      scaleDownCooldown: "5 minutes"

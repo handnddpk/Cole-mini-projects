@@ -1,0 +1,7 @@
+/Users/lap16470/Cole/Mini Projects/kafka-simulated-pipeline/services/inventory-service/src/main/java/com/ecommerce/inventory/InventoryServiceApplication.java
+/Users/lap16470/Cole/Mini Projects/kafka-simulated-pipeline/services/inventory-service/src/main/java/com/ecommerce/inventory/model/InventoryItem.java
+/Users/lap16470/Cole/Mini Projects/kafka-simulated-pipeline/services/inventory-service/src/main/java/com/ecommerce/inventory/events/InventoryEvent.java
+/Users/lap16470/Cole/Mini Projects/kafka-simulated-pipeline/services/inventory-service/src/main/java/com/ecommerce/inventory/repository/InventoryRepository.java
+/Users/lap16470/Cole/Mini Projects/kafka-simulated-pipeline/services/inventory-service/src/main/java/com/ecommerce/inventory/controller/InventoryController.java
+/Users/lap16470/Cole/Mini Projects/kafka-simulated-pipeline/services/inventory-service/src/main/java/com/ecommerce/inventory/service/InventoryService.java
+/Users/lap16470/Cole/Mini Projects/kafka-simulated-pipeline/services/inventory-service/src/main/java/com/ecommerce/inventory/events/InventoryEventPublisher.java

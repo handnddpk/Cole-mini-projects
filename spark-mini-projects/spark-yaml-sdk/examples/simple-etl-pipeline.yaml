@@ -1,0 +1,111 @@
+# Simple ETL Pipeline Example
+# This demonstrates basic extract-transform-load operations
+
+apiVersion: "spark.platform.io/v1"
+kind: "SparkPipeline"
+metadata:
+  name: "simple-etl-demo"
+  namespace: "examples"
+  labels:
+    team: "data-engineering"
+    environment: "development"
+    
+spec:
+  # Resource allocation
+  driver:
+    cores: 1
+    memory: "2g"
+    
+  executor:
+    instances: 2
+    cores: 2
+    memory: "4g"
+    
+  # Data sources
+  sources:
+    - name: "sales_data"
+      type: "csv"
+      path: "s3://demo-bucket/raw/sales.csv"
+      options:
+        header: true
+        inferSchema: true
+        
+    - name: "customer_data"
+      type: "parquet"
+      path: "s3://demo-bucket/raw/customers.parquet"
+      
+  # Data transformations
+  transformations:
+    - name: "clean_sales_data"
+      type: "sql"
+      query: |
+        SELECT 
+          customer_id,
+          product_id,
+          CAST(sale_amount AS DECIMAL(10,2)) as sale_amount,
+          DATE(sale_date) as sale_date
+        FROM sales_data
+        WHERE sale_amount > 0 
+          AND customer_id IS NOT NULL
+          
+    - name: "enrich_with_customer_info"
+      type: "sql" 
+      query: |
+        SELECT 
+          s.*,
+          c.customer_name,
+          c.customer_segment,
+          c.city,
+          c.country
+        FROM clean_sales_data s
+        JOIN customer_data c ON s.customer_id = c.id
+        
+    - name: "calculate_metrics"
+      type: "sql"
+      query: |
+        SELECT 
+          customer_id,
+          customer_name,
+          customer_segment,
+          city,
+          country,
+          COUNT(*) as total_transactions,
+          SUM(sale_amount) as total_sales,
+          AVG(sale_amount) as avg_transaction_value,
+          MIN(sale_date) as first_purchase,
+          MAX(sale_date) as last_purchase
+        FROM enrich_with_customer_info
+        GROUP BY customer_id, customer_name, customer_segment, city, country
+        
+  # Output destinations
+  sinks:
+    - name: "enriched_sales"
+      type: "parquet"
+      path: "s3://demo-bucket/processed/enriched_sales"
+      mode: "overwrite"
+      partitionBy: ["country", "customer_segment"]
+      
+    - name: "customer_metrics"
+      type: "delta"
+      path: "s3://demo-bucket/analytics/customer_metrics"
+      mode: "overwrite"
+      
+  # Schedule configuration
+  schedule:
+    type: "cron"
+    expression: "0 6 * * *"  # Daily at 6 AM
+    timezone: "UTC"
+    
+  # Quality checks
+  dataQuality:
+    checks:
+      - name: "row_count_check"
+        type: "row_count"
+        source: "customer_metrics"
+        min: 1000
+        
+      - name: "null_check"
+        type: "null_percentage"
+        source: "customer_metrics"
+        columns: ["customer_id", "total_sales"]
+        threshold: 0.01  # Less than 1% nulls allowed

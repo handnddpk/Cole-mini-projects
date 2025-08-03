@@ -1,0 +1,19 @@
+{
+  "name": "mongodb-source-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mongodb.MongoDbConnector",
+    "mongodb.connection.string": "mongodb://admin:admin123@mongodb-source:27017/?authSource=admin&replicaSet=rs0",
+    "mongodb.name": "userprofiles",
+    "collection.include.list": "userprofiles.user_profiles",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "transforms": "route",
+    "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.route.regex": "([^.]+)\\.([^.]+)",
+    "transforms.route.replacement": "cdc.$1.$2",
+    "snapshot.mode": "initial",
+    "tasks.max": "1"
+  }
+}

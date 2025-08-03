@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: api-data-collector
+  
+api:
+  alphavantage:
+    key: ${ALPHA_VANTAGE_API_KEY:DEMO_KEY}
+    symbols: ${FINANCIAL_DATA_SYMBOLS:AAPL,GOOGL,MSFT,TSLA,AMZN}
+    interval: ${FINANCIAL_DATA_INTERVAL:1min}
+  
+  openweather:
+    key: ${OPENWEATHER_API_KEY:DEMO_KEY}
+    cities: ${WEATHER_CITIES:London,NewYork,Tokyo,Sydney,Mumbai}
+    interval: ${WEATHER_UPDATE_INTERVAL:300}
+  
+  twitter:
+    bearer-token: ${TWITTER_BEARER_TOKEN:DEMO_TOKEN}
+    hashtags: ${TWITTER_HASHTAGS:#kafka,#bigdata,#realtime,#streaming}
+
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  producer:
+    acks: all
+    retries: 3
+    batch-size: 16384
+    linger-ms: 1
+    buffer-memory: 33554432
+
+logging:
+  level:
+    com.realtime: ${LOG_LEVEL:INFO}
+    org.apache.kafka: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

@@ -1,0 +1,28 @@
+{
+  "name": "postgres-source-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres-source",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "inventory",
+    "database.server.name": "inventory",
+    "table.include.list": "public.inventory_items",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_inventory",
+    "publication.name": "dbz_publication",
+    "transforms": "route",
+    "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+    "transforms.route.replacement": "cdc.$1.$3",
+    "decimal.handling.mode": "double",
+    "time.precision.mode": "connect",
+    "snapshot.mode": "initial",
+    "tasks.max": "1"
+  }
+}

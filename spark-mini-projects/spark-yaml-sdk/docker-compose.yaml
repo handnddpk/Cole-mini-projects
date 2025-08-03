@@ -1,0 +1,118 @@
+services:
+  # Spark master node
+  spark-master:
+    image: bitnami/spark:3.3.2
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - ./gds-data-core-v2:/opt/spark-apps
+      - ./data:/opt/spark-data
+      - ./jars:/opt/spark/jars
+
+  # Spark worker node
+  spark-worker:
+    image: bitnami/spark:3.3.2
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    volumes:
+      - ./gds-data-core-v2:/opt/spark-apps
+      - ./data:/opt/spark-data
+      - ./jars:/opt/spark/jars
+
+  # PostgreSQL for customer data
+  postgres:
+    image: postgres:14
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=analytics
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres-data:/var/lib/postgresql/data
+      - ./init-scripts/postgres:/docker-entrypoint-initdb.d
+
+  # MongoDB for product data
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGODB_INITDB_ROOT_USERNAME=admin
+      - MONGODB_INITDB_ROOT_PASSWORD=admin123
+    volumes:
+      - ./data/mongo-data:/data/db
+      - ./init-scripts/mongodb:/docker-entrypoint-initdb.d
+
+  # MinIO (S3-compatible storage) for orders data
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/minio-data:/data
+
+  # ClickHouse for analytics output
+  clickhouse:
+    image: clickhouse/clickhouse-server:22.3
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9002:9000"
+    volumes:
+      - ./data/clickhouse-data:/var/lib/clickhouse
+      - ./init-scripts/clickhouse:/docker-entrypoint-initdb.d
+
+  # Jupyter notebook for interactive development
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jupyter
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      # Add debugging environment variables
+      - SPARK_SUBMIT_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=4000"
+      - SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info"
+      - PYTHONPATH=/home/jovyan/work
+    volumes:
+      - ./gds-data-core-v2:/home/jovyan/work
+      - ./notebooks:/home/jovyan/notebooks
+      - ./data/jupyter:/home/jovyan/data
+      - ./data/output:/opt/spark-data/output
+      - ./config:/home/jovyan/config
+    # Add debug port
+    ports:
+      - "8888:8888"
+      - "4000:4000"
+    command: >
+      start-notebook.sh
+      --NotebookApp.token=''
+      --NotebookApp.password=''
+      --NotebookApp.log_level='DEBUG'

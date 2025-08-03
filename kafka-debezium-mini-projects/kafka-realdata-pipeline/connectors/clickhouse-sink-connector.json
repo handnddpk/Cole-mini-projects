@@ -1,0 +1,26 @@
+{
+  "name": "clickhouse-sink-connector",
+  "config": {
+    "connector.class": "com.clickhouse.kafka.connect.ClickHouseSinkConnector",
+    "tasks.max": "3",
+    "topics": "cdc.ecommerce.orders,cdc.inventory.inventory_items,financial-data,weather-data",
+    "clickhouse.server.url": "http://clickhouse:8123",
+    "clickhouse.server.database": "kafka_connect",
+    "clickhouse.server.username": "default",
+    "clickhouse.server.password": "",
+    "clickhouse.table.name": "kafka_data",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "transforms": "addMetadata",
+    "transforms.addMetadata.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addMetadata.topic.field": "kafka_topic",
+    "transforms.addMetadata.partition.field": "kafka_partition",
+    "transforms.addMetadata.offset.field": "kafka_offset",
+    "transforms.addMetadata.timestamp.field": "kafka_timestamp",
+    "exactlyOnce": "false",
+    "bufferCount": "10000",
+    "timeoutSeconds": "30"
+  }
+}

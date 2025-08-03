@@ -1,0 +1,5 @@
+kafka-python==2.0.2
+requests==2.31.0
+confluent-kafka==2.3.0
+avro-python3==1.11.3
+fastavro==1.9.4

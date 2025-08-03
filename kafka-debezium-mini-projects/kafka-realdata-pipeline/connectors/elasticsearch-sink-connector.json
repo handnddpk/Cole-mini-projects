@@ -1,0 +1,24 @@
+{
+  "name": "elasticsearch-sink-connector",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "tasks.max": "2",
+    "topics": "cdc.ecommerce.orders,cdc.ecommerce.customers,cdc.inventory.inventory_items,financial-data,weather-data,ecommerce-orders",
+    "connection.url": "http://elasticsearch:9200",
+    "type.name": "_doc",
+    "key.ignore": "false",
+    "schema.ignore": "false",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "transforms": "addTimestamp,createIndex",
+    "transforms.addTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addTimestamp.timestamp.field": "indexed_at",
+    "transforms.createIndex.type": "org.apache.kafka.connect.transforms.TimestampRouter",
+    "transforms.createIndex.topic.format": "${topic}-${timestamp}",
+    "transforms.createIndex.timestamp.format": "yyyy-MM-dd",
+    "behavior.on.null.values": "ignore",
+    "behavior.on.malformed.documents": "warn"
+  }
+}

@@ -1,0 +1,85 @@
+{
+    "job_name": "customer_order_analytics",
+    "job_type": "batch",
+    "spark_config": {
+        "spark.executor.memory": "4g",
+        "spark.executor.cores": "2",
+        "spark.driver.memory": "2g",
+        "spark.sql.shuffle.partitions": "10",
+        "spark.sql.autoBroadcastJoinThreshold": "10485760",
+        "spark.hadoop.fs.s3a.endpoint": "http://minio:9000",
+        "spark.hadoop.fs.s3a.access.key": "minioadmin",
+        "spark.hadoop.fs.s3a.secret.key": "minioadmin"
+    },
+    "sources": {
+        "customers": {
+            "type": "jdbc",
+            "url": "jdbc:postgresql://postgres:5432/analytics",
+            "table": "customers",
+            "properties": {
+                "user": "postgres",
+                "password": "postgres",
+                "driver": "org.postgresql.Driver"
+            }
+        },
+        "orders": {
+            "type": "s3",
+            "path": "s3a://data-warehouse/orders/",
+            "format": "parquet",
+            "options": {
+                "mergeSchema": "true",
+                "partitionOverwriteMode": "dynamic"
+            }
+        },
+        "products": {
+            "type": "mongodb",
+            "uri": "mongodb://admin:admin123@mongodb:27017/",
+            "database": "product_catalog",
+            "collection": "products"
+        }
+    },
+    "transformations": {
+        "customer_orders": {
+            "type": "join",
+            "left": "customers",
+            "right": "orders",
+            "on": "customer_id",
+            "join_type": "inner"
+        },
+        "order_details": {
+            "type": "sql",
+            "sql": "SELECT co.customer_id, co.customer_name, co.order_id, co.order_date, p.name as product_name, co.quantity, co.price * co.quantity as total_amount FROM customer_orders co JOIN products p ON co.product_id = p.id"
+        },
+        "customer_spending": {
+            "type": "sql",
+            "sql": "SELECT customer_id, customer_name, SUM(total_amount) as total_spent FROM order_details GROUP BY customer_id, customer_name ORDER BY total_spent DESC"
+        }
+    },
+    "sinks": {
+        "customer_analysis": {
+            "type": "clickhouse",
+            "url": "jdbc:clickhouse://clickhouse:8123",
+            "database": "analytics",
+            "table": "customer_analysis",
+            "input": "customer_spending",
+            "mode": "overwrite",
+            "properties": {
+                "user": "default",
+                "password": "",
+                "socket_timeout": "300000",
+                "createTableOptions": "ENGINE = MergeTree() ORDER BY (customer_id)"
+            }
+        },
+        "order_details_export": {
+            "type": "file",
+            "path": "/opt/spark-data/output/order_details",
+            "format": "parquet",
+            "input": "order_details",
+            "mode": "overwrite",
+            "partition_by": ["order_date"],
+            "options": {
+                "compression": "snappy"
+            }
+        }
+    }
+}

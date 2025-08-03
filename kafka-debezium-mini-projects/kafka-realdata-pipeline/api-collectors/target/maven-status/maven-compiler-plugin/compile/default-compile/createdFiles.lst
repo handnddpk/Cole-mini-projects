@@ -1,0 +1,4 @@
+com/realtime/api/collector/WeatherDataCollector.class
+com/realtime/api/collector/EcommerceDataSimulator.class
+com/realtime/api/collector/ApiDataCollectorApplication.class
+com/realtime/api/collector/FinancialDataCollector.class
