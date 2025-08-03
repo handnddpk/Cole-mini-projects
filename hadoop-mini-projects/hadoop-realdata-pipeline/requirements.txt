@@ -1,0 +1,37 @@
+# Requirements for Hadoop Real-Data Pipeline
+# API clients and data processing
+requests==2.31.0
+pandas==2.0.3
+numpy==1.24.3
+kafka-python==2.0.2
+confluent-kafka==2.2.0
+pyhive==0.6.5
+thrift==0.16.0
+thrift-sasl==0.4.3
+sasl==0.3.1
+
+# Database connectivity
+sqlalchemy==2.0.19
+psycopg2-binary==2.9.7
+redis==4.6.0
+elasticsearch==8.9.0
+
+# Data formats and serialization
+avro-python3==1.11.1
+pyarrow==12.0.1
+openpyxl==3.1.2
+
+# Monitoring and logging
+prometheus-client==0.17.1
+colorlog==6.7.0
+python-dotenv==1.0.0
+
+# Development and testing
+pytest==7.4.0
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+
+# Web scraping and APIs (optional)
+beautifulsoup4==4.12.2
+tweepy==4.14.0
+praw==7.7.1
